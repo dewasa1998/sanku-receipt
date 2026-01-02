@@ -317,27 +317,49 @@
             document.getElementById("itemPrice").value = "";
         }
 
-        function exportPNG() {
+        async function exportPNG() {
             syncMetaInputs();
             receiptData.date = new Date();
             renderReceipt();
+
             const ui = document.querySelectorAll(".ui-only");
             ui.forEach(el => el.classList.add("no-print"));
-            html2canvas(document.getElementById("receipt"), {
-                scale: 2,
-                useCORS: true,
-                allowTaint: false
-            })
-                .then(canvas => {
-                    const link = document.createElement("a");
-                    link.download = "receipt.png";
-                    link.href = canvas.toDataURL("image/png");
-                    link.click();
-                })
-                .finally(() => {
-                    ui.forEach(el => el.classList.remove("no-print"));
+
+            try {
+                const canvas = await html2canvas(
+                    document.getElementById("receipt"),
+                    { scale: 2, useCORS: true }
+                );
+
+                const blob = await new Promise(resolve =>
+                    canvas.toBlob(resolve, "image/png")
+                );
+
+                const file = new File([blob], "receipt.png", {
+                    type: "image/png"
                 });
+
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    await navigator.share({
+                        files: [file],
+                        title: "Receipt",
+                        text: "Receipt"
+                    });
+                } else {
+                    // fallback: download
+                    const link = document.createElement("a");
+                    link.href = canvas.toDataURL("image/png");
+                    link.download = "receipt.png";
+                    link.click();
+                }
+
+            } catch (err) {
+                console.error("Share failed:", err);
+            } finally {
+                ui.forEach(el => el.classList.remove("no-print"));
+            }
         }
+
 
         function syncMetaInputs() {
             receiptData.recipient =
