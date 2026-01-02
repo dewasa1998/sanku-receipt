@@ -164,7 +164,7 @@
         <div id="receipt" class="receipt">
 
             <div class="center">
-                <img class="logo"
+                <img class="logo" crossorigin="anonymous"
                     src="https://raw.githubusercontent.com/dewasa1998/sanku-receipt/refs/heads/main/LOGO%20SANKU.webp" />
             </div>
 
@@ -324,7 +324,9 @@
             const ui = document.querySelectorAll(".ui-only");
             ui.forEach(el => el.classList.add("no-print"));
             html2canvas(document.getElementById("receipt"), {
-                scale: 2
+                scale: 2,
+                useCORS: true,
+                allowTaint: false
             })
                 .then(canvas => {
                     const link = document.createElement("a");
