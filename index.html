@@ -2,373 +2,369 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Receipt MVP</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Receipt MVP</title>
 
-    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
-    <style>
-        * {
-            box-sizing: border-box;
-        }
+  <style>
+    * {
+      box-sizing: border-box;
+    }
 
-        body {
-            background: #eee;
-            font-family: monospace;
-            padding: 16px;
-        }
+    body {
+      background: #eee;
+      font-family: monospace;
+      padding: 16px;
+    }
 
-        .app {
-            max-width: 420px;
-            margin: auto;
-        }
+    .app {
+      max-width: 420px;
+      margin: auto;
+    }
 
-        .item-name {
-            max-width: 260px;
-        }
+    .item-name {
+      max-width: 260px;
+    }
 
-        .unit-price {
-            font-size: 10px;
-            padding-left: 12px;
-        }
+    .unit-price {
+      font-size: 10px;
+      padding-left: 12px;
+    }
 
-        /* INPUT & BUTTON NORMALIZATION */
-        input,
-        button {
-            width: 100%;
-            height: 40px;
-            padding: 8px;
-            margin-bottom: 8px;
-            font-family: monospace;
-            font-size: 14px;
-        }
+    /* INPUT & BUTTON NORMALIZATION */
+    input,
+    button {
+      width: 100%;
+      height: 40px;
+      padding: 8px;
+      margin-bottom: 8px;
+      font-family: monospace;
+      font-size: 14px;
+    }
 
-        button {
-            cursor: pointer;
-        }
+    button {
+      cursor: pointer;
+    }
 
-        /* EXTRA SPACING GROUPS */
-        .form-group {
-            margin-bottom: 12px;
-        }
+    /* EXTRA SPACING GROUPS */
+    .form-group {
+      margin-bottom: 12px;
+    }
 
-        .button-group {
-            margin-bottom: 16px;
-        }
+    .button-group {
+      margin-bottom: 16px;
+    }
 
-        .ui-only {
-            display: block;
-        }
+    .ui-only {
+      display: block;
+    }
 
-        .receipt {
-            width: 384px;
-            background: white;
-            padding: 12px;
-            font-size: 12px;
-            margin-top: 12px;
-        }
+    .receipt {
+      width: 384px;
+      background: white;
+      padding: 12px;
+      font-size: 14px;
+      margin-top: 12px;
+    }
 
-        .row {
-            display: flex;
-            justify-content: space-between;
-        }
+    .row {
+      display: flex;
+      justify-content: space-between;
+    }
 
-        .center {
-            text-align: center;
-        }
+    .center {
+      text-align: center;
+    }
 
-        .bold {
-            font-weight: bold;
-        }
+    .bold {
+      font-weight: bold;
+    }
 
-        .small {
-            font-size: 10px;
-        }
+    .small {
+      font-size: 12px;
+    }
 
-        .divider {
-            border-top: 1px dashed #000;
-            margin: 6px 0;
-        }
+    .divider {
+      border-top: 1px dashed #000;
+      margin: 6px 0;
+    }
 
-        .actions {
-            display: flex;
-            gap: 6px;
-            margin-bottom: 6px;
-        }
+    .actions {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
 
-        .actions button {
-            height: 32px;
-            font-size: 12px;
-        }
+    .actions button {
+      height: 32px;
+      font-size: 12px;
+    }
 
-        .logo {
-            max-width: 100%;
-            max-height: 80px;
-            margin-bottom: 6px;
-        }
+    .logo {
+      max-width: 100%;
+      max-height: 80px;
+      margin-bottom: 6px;
+    }
 
-        .no-print {
-            display: none !important;
-        }
+    .no-print {
+      display: none !important;
+    }
 
-        @media print {
-            .ui-only {
-                display: none !important;
-            }
+    @media print {
+      .ui-only {
+        display: none !important;
+      }
 
-            body * {
-                visibility: hidden;
-            }
+      body * {
+        visibility: hidden;
+      }
 
-            #receipt,
-            #receipt * {
-                visibility: visible;
-            }
+      #receipt,
+      #receipt * {
+        visibility: visible;
+      }
 
-            #receipt {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 384px;
-            }
-        }
-    </style>
+      #receipt {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 384px;
+      }
+    }
+  </style>
 </head>
 
 <body>
-    <div class="app">
+  <div class="app">
 
-        <!-- ITEM INPUT -->
-        <div class="form-group">
-            <input id="itemName" placeholder="Item name" />
-            <input id="itemQty" type="number" value="1" placeholder="Qty" />
-            <input id="itemPrice" type="number" placeholder="Unit price" />
-        </div>
-
-        <div class="button-group ui-only">
-            <button onclick="addItem()">Add / Update Item</button>
-        </div>
-
-        <!-- META INPUT -->
-        <div class="form-group">
-            <input id="recipient" placeholder="Recipient (optional)" />
-            <input id="paymentMethod" placeholder="Payment method (optional)" />
-        </div>
-
-        <div class="button-group ui-only">
-            <button onclick="exportPNG()">Share Receipt</button>
-        </div>
-
-        <!-- RECEIPT -->
-        <div id="receipt" class="receipt">
-
-            <div class="center">
-                <img class="logo" crossorigin="anonymous"
-                    src="https://raw.githubusercontent.com/dewasa1998/sanku-receipt/refs/heads/main/LOGO%20SANKU.webp" />
-            </div>
-
-            <div class="center bold">GULA AREN SANKU</div>
-            <div class="center small">Manis dan Wangi, 100% Asli Tanpa Pengawet</div>
-            <div class="center small">(+62) 851 5541 7755</div>
-
-            <div class="divider"></div>
-
-            <div id="items"></div>
-
-            <div id="meta"></div>
-
-            <div class="divider"></div>
-
-            <div class="row bold">
-                <span>TOTAL</span>
-                <span id="total">0</span>
-            </div>
-
-            <div class="divider"></div>
-            <div class="center small" id="date"></div>
-            <div class="center small" style="margin-top:6px;">
-                Terima Kasih
-            </div>
-
-        </div>
+    <!-- ITEM INPUT -->
+    <div class="form-group">
+      <input id="itemName" placeholder="Item name" />
+      <input id="itemQty" type="number" value="1" placeholder="Qty" />
+      <input id="itemPrice" type="number" placeholder="Unit price" />
     </div>
 
-    <script>
-        const receiptData = {
-            items: [],
-            recipient: "",
-            paymentMethod: "",
-            date: new Date()
-        };
-        let editIndex = null;
+    <div class="button-group ui-only">
+      <button onclick="addItem()">Add / Update Item</button>
+    </div>
 
-        function format(num) {
-            return num.toLocaleString("id-ID");
-        }
+    <!-- META INPUT -->
+    <div class="form-group">
+      <input id="recipient" placeholder="Recipient (optional)" />
+      <input id="paymentMethod" placeholder="Payment method (optional)" />
+    </div>
 
-        function formatDateWIB(date) {
-            const months = [
-                "January", "February", "March", "April", "May", "June",
-                "July", "August", "September", "October", "November", "December"
-            ];
-            const d = date.getDate();
-            const m = months[date.getMonth()];
-            const y = date.getFullYear();
-            const hh = String(date.getHours()).padStart(2, "0");
-            const mm = String(date.getMinutes()).padStart(2, "0");
-            return `${d} ${m} ${y}, ${hh}:${mm} WIB`;
-        }
+    <div class="button-group ui-only">
+      <button onclick="exportPNG()">Export PNG</button>
+    </div>
 
-        function renderReceipt() {
-            const itemsDiv = document.getElementById("items");
-            const metaDiv = document.getElementById("meta");
-            itemsDiv.innerHTML = "";
-            metaDiv.innerHTML = "";
-            let total = 0;
-            receiptData.items.forEach((item, index) => {
-                const lineTotal = item.qty * item.price;
-                total += lineTotal;
-                const row = document.createElement("div");
-                row.className = "row";
-                row.innerHTML = `
+    <!-- RECEIPT -->
+    <div id="receipt" class="receipt">
+
+      <div class="center">
+        <img class="logo" crossorigin="anonymous" src="https://raw.githubusercontent.com/dewasa1998/sanku-receipt/refs/heads/main/LOGO%20SANKU.webp" />
+      </div>
+
+      <div class="center bold">GULA AREN SANKU</div>
+      <div class="center small">Manis dan Wangi, 100% Asli Tanpa Pengawet</div>
+      <div class="center small">(+62) 851 5541 7755</div>
+
+      <div class="divider"></div>
+
+      <div id="items"></div>
+
+      <div id="meta"></div>
+
+      <div class="divider"></div>
+
+      <div class="row bold">
+        <span>TOTAL</span>
+        <span id="total">0</span>
+      </div>
+
+      <div class="divider"></div>
+      <div class="center small" id="date"></div>
+      <div class="center small" style="margin-top:6px;">
+        Terima Kasih
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    const receiptData = {
+      items: [],
+      recipient: "",
+      paymentMethod: "",
+      date: new Date()
+    };
+    let editIndex = null;
+
+    function format(num) {
+      return num.toLocaleString("id-ID");
+    }
+
+    function formatDateWIB(date) {
+      const months = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+      ];
+      const d = date.getDate();
+      const m = months[date.getMonth()];
+      const y = date.getFullYear();
+      const hh = String(date.getHours()).padStart(2, "0");
+      const mm = String(date.getMinutes()).padStart(2, "0");
+      return `${d} ${m} ${y}, ${hh}:${mm} WIB`;
+    }
+
+    function renderReceipt() {
+      const itemsDiv = document.getElementById("items");
+      const metaDiv = document.getElementById("meta");
+      itemsDiv.innerHTML = "";
+      metaDiv.innerHTML = "";
+      let total = 0;
+      receiptData.items.forEach((item, index) => {
+        const lineTotal = item.qty * item.price;
+        total += lineTotal;
+        const row = document.createElement("div");
+        row.className = "row";
+        row.innerHTML = `
   <div class="item-name">
     ${item.qty} x ${item.name}
     <div class="unit-price">@${format(item.price)}</div>
   </div>
   <div>${format(lineTotal)}</div>
 `;
-                const actions = document.createElement("div");
-                actions.className = "actions ui-only";
-                const editBtn = document.createElement("button");
-                editBtn.textContent = "Edit";
-                editBtn.onclick = () => startEdit(index);
-                const deleteBtn = document.createElement("button");
-                deleteBtn.textContent = "✕";
-                deleteBtn.onclick = () => removeItem(index);
-                actions.appendChild(editBtn);
-                actions.appendChild(deleteBtn);
-                itemsDiv.appendChild(row);
-                itemsDiv.appendChild(actions);
-            });
-            if (receiptData.recipient) {
-                metaDiv.innerHTML += `
+        const actions = document.createElement("div");
+        actions.className = "actions ui-only";
+        const editBtn = document.createElement("button");
+        editBtn.textContent = "Edit";
+        editBtn.onclick = () => startEdit(index);
+        const deleteBtn = document.createElement("button");
+        deleteBtn.textContent = "✕";
+        deleteBtn.onclick = () => removeItem(index);
+        actions.appendChild(editBtn);
+        actions.appendChild(deleteBtn);
+        itemsDiv.appendChild(row);
+        itemsDiv.appendChild(actions);
+      });
+      if (receiptData.recipient) {
+        metaDiv.innerHTML += `
       <div class="row">
         <span>Recipient</span>
         <span>${receiptData.recipient}</span>
       </div>
     `;
-            }
-            if (receiptData.paymentMethod) {
-                metaDiv.innerHTML += `
+      }
+      if (receiptData.paymentMethod) {
+        metaDiv.innerHTML += `
       <div class="row">
         <span>Metode Pembayaran</span>
         <span>${receiptData.paymentMethod}</span>
       </div>
     `;
-            }
-            if (metaDiv.innerHTML !== "") {
-                metaDiv.innerHTML = `<div class="divider"></div>` + metaDiv.innerHTML;
-            }
-            document.getElementById("total").textContent = format(total);
-            document.getElementById("date").textContent =
-                formatDateWIB(receiptData.date);
+      }
+      if (metaDiv.innerHTML !== "") {
+        metaDiv.innerHTML = `<div class="divider"></div>` + metaDiv.innerHTML;
+      }
+      document.getElementById("total").textContent = format(total);
+      document.getElementById("date").textContent =
+        formatDateWIB(receiptData.date);
+    }
+
+    function addItem() {
+      const name = document.getElementById("itemName").value.trim();
+      const qty = Number(document.getElementById("itemQty").value);
+      const price = Number(document.getElementById("itemPrice").value);
+      if (!name || qty <= 0 || price <= 0) return;
+      if (editIndex !== null) {
+        receiptData.items[editIndex] = {
+          name,
+          qty,
+          price
+        };
+        editIndex = null;
+      } else {
+        receiptData.items.push({
+          name,
+          qty,
+          price
+        });
+      }
+      clearForm();
+      renderReceipt();
+    }
+
+    function startEdit(index) {
+      const item = receiptData.items[index];
+      document.getElementById("itemName").value = item.name;
+      document.getElementById("itemQty").value = item.qty;
+      document.getElementById("itemPrice").value = item.price;
+      editIndex = index;
+    }
+
+    function removeItem(index) {
+      receiptData.items.splice(index, 1);
+      renderReceipt();
+    }
+
+    function clearForm() {
+      document.getElementById("itemName").value = "";
+      document.getElementById("itemQty").value = 1;
+      document.getElementById("itemPrice").value = "";
+    }
+    async function exportPNG() {
+      syncMetaInputs();
+      receiptData.date = new Date();
+      renderReceipt();
+      const ui = document.querySelectorAll(".ui-only");
+      ui.forEach(el => el.classList.add("no-print"));
+      try {
+        const DPR = window.devicePixelRatio || 2;
+        const canvas = await html2canvas(
+          document.getElementById("receipt"), {
+            scale: DPR,
+            useCORS: true
+          }
+        );
+        const blob = await new Promise(resolve =>
+          canvas.toBlob(resolve, "image/png")
+        );
+        const file = new File([blob], "receipt.png", {
+          type: "image/png"
+        });
+        if (navigator.canShare && navigator.canShare({
+            files: [file]
+          })) {
+          await navigator.share({
+            files: [file],
+            title: "Receipt",
+            text: "Receipt"
+          });
+        } else {
+          // fallback: download
+          const link = document.createElement("a");
+          link.href = canvas.toDataURL("image/png");
+          link.download = "receipt.png";
+          link.click();
         }
+      } catch (err) {
+        console.error("Share failed:", err);
+      } finally {
+        ui.forEach(el => el.classList.remove("no-print"));
+      }
+    }
 
-        function addItem() {
-            const name = document.getElementById("itemName").value.trim();
-            const qty = Number(document.getElementById("itemQty").value);
-            const price = Number(document.getElementById("itemPrice").value);
-            if (!name || qty <= 0 || price <= 0) return;
-            if (editIndex !== null) {
-                receiptData.items[editIndex] = {
-                    name,
-                    qty,
-                    price
-                };
-                editIndex = null;
-            } else {
-                receiptData.items.push({
-                    name,
-                    qty,
-                    price
-                });
-            }
-            clearForm();
-            renderReceipt();
-        }
-
-        function startEdit(index) {
-            const item = receiptData.items[index];
-            document.getElementById("itemName").value = item.name;
-            document.getElementById("itemQty").value = item.qty;
-            document.getElementById("itemPrice").value = item.price;
-            editIndex = index;
-        }
-
-        function removeItem(index) {
-            receiptData.items.splice(index, 1);
-            renderReceipt();
-        }
-
-        function clearForm() {
-            document.getElementById("itemName").value = "";
-            document.getElementById("itemQty").value = 1;
-            document.getElementById("itemPrice").value = "";
-        }
-
-        async function exportPNG() {
-            syncMetaInputs();
-            receiptData.date = new Date();
-            renderReceipt();
-
-            const ui = document.querySelectorAll(".ui-only");
-            ui.forEach(el => el.classList.add("no-print"));
-
-            try {
-                const canvas = await html2canvas(
-                    document.getElementById("receipt"),
-                    { scale: 2, useCORS: true }
-                );
-
-                const blob = await new Promise(resolve =>
-                    canvas.toBlob(resolve, "image/png")
-                );
-
-                const file = new File([blob], "receipt.png", {
-                    type: "image/png"
-                });
-
-                if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                    await navigator.share({
-                        files: [file],
-                        title: "Receipt",
-                        text: "Receipt"
-                    });
-                } else {
-                    // fallback: download
-                    const link = document.createElement("a");
-                    link.href = canvas.toDataURL("image/png");
-                    link.download = "receipt.png";
-                    link.click();
-                }
-
-            } catch (err) {
-                console.error("Share failed:", err);
-            } finally {
-                ui.forEach(el => el.classList.remove("no-print"));
-            }
-        }
-
-
-        function syncMetaInputs() {
-            receiptData.recipient =
-                document.getElementById("recipient").value.trim();
-            receiptData.paymentMethod =
-                document.getElementById("paymentMethod").value.trim();
-        }
-        renderReceipt();
-    </script>
+    function syncMetaInputs() {
+      receiptData.recipient =
+        document.getElementById("recipient").value.trim();
+      receiptData.paymentMethod =
+        document.getElementById("paymentMethod").value.trim();
+    }
+    renderReceipt();
+  </script>
 </body>
 
 </html>
